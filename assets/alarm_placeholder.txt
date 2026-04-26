@@ -1,0 +1,4 @@
+Place an optional alarm.wav file here for an audible beep alert.
+DrowsGuard uses pyttsx3 for voice alerts by default.
+If you want an additional sound effect, add alarm.wav to this directory
+and update alerter.py to play it via the `playsound` or `pygame` library.
