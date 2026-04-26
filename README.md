@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # DrowsGuard — AI Driver Drowsiness Detection System
 
 Real-time CPU-only drowsiness detection using MediaPipe Face Mesh, OpenCV, and Python.
