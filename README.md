@@ -1,375 +1,511 @@
-<<<<<<< HEAD
-# DrowsGuard — AI Driver Drowsiness Detection System
-
-Real-time CPU-only drowsiness detection using MediaPipe Face Mesh, OpenCV, and Python.
-
----
-
-## Features
-
-| Feature | Implementation |
-|---|---|
-| Eye tracking | Eye Aspect Ratio (EAR) via MediaPipe |
-| Yawn detection | Mouth Aspect Ratio (MAR) |
-| Head pose estimation | solvePnP with 6-point 3-D face model |
-| Distraction detection | Placeholder (extensible) |
-| Fatigue scoring | Weighted formula + EMA smoothing |
-| Voice alerts | pyttsx3 (offline, no API key) |
-| Live dashboard | Matplotlib rolling-window graph |
-
----
-
-## Quickstart
-
-```bash
-# 1. Clone / download the project
-cd drowsguard
-
-# 2. Create a virtual environment (recommended)
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Run
-python main.py
-```
-
-### Controls
-
-| Key | Action |
-|-----|--------|
-| `q` | Quit |
-| `d` | Toggle matplotlib dashboard |
-| `r` | Reset fatigue state & counters |
-
-### CLI flags
-
-```bash
-python main.py --camera 1          # Use external webcam
-python main.py --no-dashboard      # Disable matplotlib window
-python main.py --width 1280 --height 720
-```
-
----
-
-## Project Structure
-
-```
-drowsguard/
-├── main.py              # Entry point & webcam loop
-├── detector.py          # MediaPipe pipeline + overlay rendering
-├── alerter.py           # 3-level alert system with voice (pyttsx3)
-├── dashboard.py         # Real-time matplotlib dashboard
-├── config.py            # All tunable constants
-├── requirements.txt
-├── utils/
-│   ├── ear_calculator.py   # Eye Aspect Ratio
-│   ├── mar_calculator.py   # Mouth Aspect Ratio
-│   ├── head_pose.py        # solvePnP head pose estimation
-│   └── fatigue_score.py    # Weighted scoring + EMA smoothing
-├── tests/
-│   └── test_detection.py   # pytest test suite
-└── assets/
-    └── alarm_placeholder.txt
-=======
-# 🚗 DrowsGuard — AI Driver Drowsiness Detection
+# 🚗 DrowsGuard — AI Driver Drowsiness Detection System
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)
-![OpenCV](https://img.shields.io/badge/OpenCV-4.9%2B-5C3EE8?logo=opencv&logoColor=white)
-![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10%2B-00897B)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-ComputerVision-5C3EE8?logo=opencv&logoColor=white)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-FaceMesh-00BFA5)
+![Real-Time](https://img.shields.io/badge/Real--Time-Detection-red)
+![CPU Only](https://img.shields.io/badge/CPU-Optimized-success)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![CI](https://img.shields.io/github/actions/workflow/status/YOUR_USERNAME/drowsguard/ci.yml?label=CI&logo=github)
 
-**Real-time driver drowsiness detection using computer vision and facial landmark analysis.**  
-Detects eye closure, yawning, head nodding, and distraction — then escalates smart alerts
-before it's too late.
+### Real-Time AI Driver Fatigue Monitoring Using Computer Vision, Facial Landmark Tracking & Intelligent Risk Scoring
+
+*Production-ready driver drowsiness detection system powered by MediaPipe Face Mesh, OpenCV, and real-time fatigue analytics.*
 
 </div>
 
 ---
 
-## ✨ Features
+# 📌 Overview
 
-| Feature | Details |
-|---|---|
-| 👁️ **Eye tracking** | Eye Aspect Ratio (EAR) with sub-frame blink detection |
-| 😮 **Yawn detection** | Mouth Aspect Ratio (MAR) with duration gating |
-| 🤕 **Head pose** | 6-DoF solvePnP estimation — nod + look-away |
-| 🧠 **Fatigue score** | Weighted formula with EMA smoothing |
-| 🔊 **Smart alerts** | 3-level escalation — soft beep → siren → critical flash |
-| 🗣️ **Voice prompts** | Offline TTS via pyttsx3 |
-| 📊 **Live dashboard** | Real-time matplotlib risk + component chart |
-| 📝 **Session logging** | Per-frame CSV + JSON session summaries |
-| 📲 **Remote alerts** | Optional Twilio SMS / Telegram bot |
-| ⚡ **No GPU needed** | Runs on CPU at 30 FPS on a laptop webcam |
+**DrowsGuard** is a real-time AI-powered driver drowsiness detection system designed to improve road safety through intelligent fatigue monitoring and behavioral analysis.
 
----
+The platform leverages:
 
-## 🧠 Detection Algorithm
+- Computer Vision
+- Facial Landmark Detection
+- Head Pose Estimation
+- Eye Aspect Ratio (EAR)
+- Mouth Aspect Ratio (MAR)
+- Real-time fatigue scoring
+- Smart alert escalation systems
 
-### Fatigue Score Formula
+to detect signs of:
 
-```
-Risk = 0.50 × EyeClosure + 0.20 × Yawn + 0.20 × HeadPose + 0.10 × Distraction
-```
+- Eye closure
+- Yawning
+- Head nodding
+- Driver distraction
+- Fatigue accumulation
 
-Each component is independently thresholded by duration (in seconds) so a single-frame flicker never fires an alert.
-
-### Alert Escalation
-
-```
-Risk ≥ 0.40  →  Level 1 · Mild Fatigue       → soft beep  + "Please focus on the road."
-Risk ≥ 0.65  →  Level 2 · Dangerous           → siren      + "Wake up! Please stay alert."
-Risk ≥ 0.85  →  Level 3 · No Response         → continuous + red flash + SMS / Telegram
-```
-
-After every alert the system checks for driver recovery (eyes open, head up).  
-If the driver responds → alert cancelled.  
-If the driver does **not** respond within 5 s → level escalates automatically.
+Built entirely using CPU-optimized pipelines, the system runs efficiently on standard laptops and embedded systems without requiring GPU acceleration.
 
 ---
 
-## 🏗️ Architecture
+# 🚀 Core Features
 
-```
-drowsguard/
-├── main.py                   # CLI entry point + camera loop
-├── detector.py               # MediaPipe pipeline → FrameResult
-├── alerter.py                # 3-level smart alert state machine
-├── dashboard.py              # Session logger + live matplotlib chart
-├── config.py                 # All thresholds in one place
-├── utils/
-│   ├── ear_calculator.py     # Eye Aspect Ratio (EAR)
-│   ├── mar_calculator.py     # Mouth Aspect Ratio (MAR)
-│   ├── head_pose.py          # solvePnP head pose (pitch/yaw/roll)
-│   └── fatigue_score.py      # Weighted scoring + blink tracker
-├── tests/
-│   └── test_detection.py     # pytest unit tests
-├── assets/
-│   └── alarm.wav             # Alarm sound file (add your own)
-└── .github/workflows/ci.yml  # GitHub Actions CI
->>>>>>> 942b7caa1b8ce0ed4465081148a7de6d1c21f4b3
+## 👁️ Real-Time Eye Tracking
+
+- Eye Aspect Ratio (EAR) computation
+- Blink detection & duration tracking
+- Eye closure monitoring
+- Microsleep detection logic
+- Fatigue-aware blink analytics
+
+---
+
+## 😮 AI Yawn Detection
+
+- Mouth Aspect Ratio (MAR) analysis
+- Consecutive yawn duration monitoring
+- Fatigue-induced yawning detection
+- Real-time facial landmark tracking
+
+---
+
+## 🤕 Head Pose Estimation
+
+- 6-point 3D facial landmark model
+- solvePnP-based head orientation
+- Pitch / yaw / roll estimation
+- Driver distraction monitoring
+- Look-away detection
+
+---
+
+## 🧠 Intelligent Fatigue Scoring
+
+- Weighted fatigue risk formula
+- Exponential Moving Average (EMA) smoothing
+- Multi-factor behavioral fusion
+- Real-time risk accumulation
+- Alert escalation logic
+
+---
+
+## 🔊 Smart Alert System
+
+- 3-level alert escalation
+- Offline voice alerts using pyttsx3
+- Audible alarms
+- Recovery-aware cancellation
+- Escalation timeout monitoring
+
+---
+
+## 📊 Live Dashboard & Analytics
+
+- Real-time fatigue graph
+- Rolling-window analytics
+- Eye/yawn/head metrics visualization
+- Session logging
+- Performance monitoring dashboard
+
+---
+
+# 🏗️ System Architecture
+
+```text
+ Webcam Input
+       │
+       ▼
+┌─────────────────────┐
+│ MediaPipe Face Mesh │
+│ Facial Landmarks    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Feature Extraction  │
+│ EAR • MAR • Pose    │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Fatigue Risk Engine │
+│ EMA + Weighted Risk │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Alert System        │
+│ Voice + Dashboard   │
+└─────────────────────┘
 ```
 
 ---
 
-<<<<<<< HEAD
-## Fatigue Scoring Formula
+# 🧩 Tech Stack
 
-```
-Risk = 0.50 × EyeClosure
-     + 0.20 × Yawn
-     + 0.20 × HeadPose
-     + 0.10 × Distraction
+## Core Technologies
 
-SmoothedRisk = 0.30 × Risk + 0.70 × PreviousRisk
-```
-
-## Alert Levels
-
-| Level | Threshold | Voice message |
-|-------|-----------|---------------|
-| 1 — Caution  | ≥ 0.40 | "Please focus"  |
-| 2 — Warning  | ≥ 0.65 | "Stay alert!"  |
-| 3 — Critical | ≥ 0.85 | "Wake up!"     |
+- **Python**
+- **OpenCV**
+- **MediaPipe Face Mesh**
+- **NumPy**
+- **Matplotlib**
 
 ---
 
-## Running Tests
+## AI / Vision Components
+
+- **Facial Landmark Detection**
+- **solvePnP Head Pose Estimation**
+- **EAR & MAR Metrics**
+- **Fatigue Risk Modeling**
+
+---
+
+## Audio & Alerts
+
+- **pyttsx3**
+- **Offline Voice Alerts**
+- **Alarm Escalation Logic**
+
+---
+
+# 📂 Project Structure
 
 ```bash
-pip install pytest
-pytest tests/ -v
-=======
-## 🚀 Quick Start
+drowsguard/
+│
+├── main.py              # Entry point & webcam loop
+├── detector.py          # MediaPipe pipeline + overlays
+├── alerter.py           # Multi-level alert system
+├── dashboard.py         # Real-time matplotlib dashboard
+├── config.py            # Tunable thresholds & constants
+├── requirements.txt
+│
+├── utils/
+│   ├── ear_calculator.py    # Eye Aspect Ratio logic
+│   ├── mar_calculator.py    # Mouth Aspect Ratio logic
+│   ├── head_pose.py         # solvePnP head pose estimation
+│   └── fatigue_score.py     # Weighted risk scoring + EMA
+│
+├── tests/
+│   └── test_detection.py    # Pytest unit tests
+│
+└── assets/
+    └── alarm.wav
+```
 
-### 1 · Clone & Install
+---
+
+# ⚡ Quick Start
+
+## 1️⃣ Clone Repository
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/drowsguard.git
+
 cd drowsguard
+```
 
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+---
 
+## 2️⃣ Create Virtual Environment
+
+```bash
+python -m venv .venv
+
+source .venv/bin/activate
+
+# Windows
+.venv\Scripts\activate
+```
+
+---
+
+## 3️⃣ Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2 · Add an alarm sound
+---
 
-Place any `.wav` file at `assets/alarm.wav`.  
-Free options: [Freesound.org](https://freesound.org) or `assets/generate_tone.py` (see below).
-
-### 3 · Run
+## 4️⃣ Run Application
 
 ```bash
-# Live webcam
 python main.py
+```
 
-# From a video file
-python main.py --source path/to/video.mp4
+---
 
-# Show face mesh overlay
-python main.py --mesh
+# 🎮 Runtime Controls
 
-# Headless / no dashboard (embedded / Raspberry Pi)
+| Key | Action |
+|------|------|
+| `q` | Quit application |
+| `d` | Toggle dashboard |
+| `m` | Toggle face mesh overlay |
+| `r` | Reset fatigue state |
+
+---
+
+# ⚙️ CLI Options
+
+```bash
+# Use external webcam
+python main.py --camera 1
+
+# Disable dashboard
 python main.py --no-dashboard
 
-# Custom thresholds
-python main.py --ear-thresh 0.20 --risk1 0.35 --risk2 0.60 --risk3 0.80
+# Custom resolution
+python main.py --width 1280 --height 720
+
+# Video file input
+python main.py --source video.mp4
+
+# Enable notifications
+python main.py --notify
 ```
 
-### Key bindings (while running)
-| Key | Action |
-|-----|--------|
-| `q` | Quit |
-| `r` | Reset session counters |
-| `m` | Toggle face mesh overlay |
+---
+
+# 🧠 Fatigue Scoring Formula
+
+```text
+Risk =
+0.50 × EyeClosure +
+0.20 × Yawn +
+0.20 × HeadPose +
+0.10 × Distraction
+```
 
 ---
 
-## 📊 Live Dashboard
+# 📈 EMA Smoothing
 
-A matplotlib window shows a **60-second rolling window** of:
-
-- **Fatigue Risk** (blue line) with threshold guidelines
-- **Eye / Yawn / Head / Distraction** component scores
-
-Session data is written to `logs/session_YYYYMMDD_HHMMSS.csv` and a cumulative
-summary is appended to `logs/session_data.json` after each run.
+```text
+SmoothedRisk =
+0.30 × CurrentRisk +
+0.70 × PreviousRisk
+```
 
 ---
 
-## 📲 Remote Notifications (Optional)
+# 🚨 Alert Escalation Levels
 
-Set environment variables, then run with `--notify`:
+| Level | Threshold | Action |
+|------|------|------|
+| Level 1 — Caution | ≥ 0.40 | Soft beep + voice warning |
+| Level 2 — Warning | ≥ 0.65 | Siren + alert escalation |
+| Level 3 — Critical | ≥ 0.85 | Continuous alarm + notifications |
+
+---
+
+# 📊 Live Dashboard
+
+The live matplotlib dashboard visualizes:
+
+- Fatigue risk score
+- Eye closure metrics
+- Yawn activity
+- Head movement analytics
+- Alert thresholds
+- Rolling session trends
+
+Session data is logged for analytics and debugging.
+
+---
+
+# 📲 Remote Notifications (Optional)
+
+Supports:
+
+- Twilio SMS alerts
+- Telegram bot notifications
+
+## Example Environment Variables
 
 ```bash
-# Twilio SMS
+# Twilio
 export TWILIO_SID="ACxxxx"
 export TWILIO_TOKEN="xxxx"
-export TWILIO_FROM="+1234567890"
-export ALERT_PHONE="+0987654321"
+export TWILIO_FROM="+123456789"
+export ALERT_PHONE="+987654321"
 
-# Telegram bot
-export TELEGRAM_TOKEN="bot_token_here"
-export TELEGRAM_CHAT_ID="chat_id_here"
-
-python main.py --notify
->>>>>>> 942b7caa1b8ce0ed4465081148a7de6d1c21f4b3
+# Telegram
+export TELEGRAM_TOKEN="bot_token"
+export TELEGRAM_CHAT_ID="chat_id"
 ```
 
 ---
 
-<<<<<<< HEAD
-## Performance
+# ⚙️ Configuration Reference
 
-Tested on a 2021 laptop with integrated Intel graphics:
-- **~25–30 FPS** at 640×480 (CPU only)
-- MediaPipe's optimised C++ backend handles landmark inference
-- Dashboard redraws at most 10 Hz to protect frame rate
-
----
-
-## Configuration
-
-All thresholds live in `config.py`. Key parameters:
-
-```python
-EAR_THRESHOLD      = 0.22   # Eye closed below this
-MAR_THRESHOLD      = 0.55   # Yawn above this
-HEAD_PITCH_THRESHOLD = 15.0 # Degrees forward nod
-HEAD_YAW_THRESHOLD   = 20.0 # Degrees sideways turn
-EMA_ALPHA          = 0.30   # Smoothing factor
-```
-
----
-
-## License
-
-MIT — free to use and extend.
-=======
-## ⚙️ Configuration Reference
-
-All tuneable constants live in `config.py`:
+All configurable thresholds are centralized in `config.py`.
 
 | Constant | Default | Description |
-|---|---|---|
-| `EAR_THRESHOLD` | `0.22` | EAR below this = eyes closed |
-| `MAR_THRESHOLD` | `0.65` | MAR above this = yawning |
-| `EYE_CLOSE_CONSECUTIVE` | `2.5 s` | Duration before eye-close counts |
-| `YAWN_CONSECUTIVE` | `1.5 s` | Duration before yawn counts |
-| `HEAD_PITCH_THRESHOLD` | `15°` | Chin-drop angle |
-| `HEAD_YAW_THRESHOLD` | `25°` | Look-away angle |
-| `RISK_LEVEL1/2/3` | `0.40 / 0.65 / 0.85` | Alert thresholds |
-| `ESCALATION_TIMEOUT` | `5.0 s` | No-response window before escalation |
+|------|------|------|
+| `EAR_THRESHOLD` | 0.22 | Eye closure threshold |
+| `MAR_THRESHOLD` | 0.65 | Yawn threshold |
+| `HEAD_PITCH_THRESHOLD` | 15° | Forward nod angle |
+| `HEAD_YAW_THRESHOLD` | 25° | Look-away threshold |
+| `EMA_ALPHA` | 0.30 | EMA smoothing factor |
+| `RISK_LEVEL1/2/3` | 0.40 / 0.65 / 0.85 | Alert thresholds |
 
 ---
 
-## 🧪 Tests
+# 🧪 Testing
+
+## Run Tests
 
 ```bash
 pytest tests/ -v --cov=.
 ```
 
-Test coverage includes:
+---
+
+## Test Coverage Includes
+
 - EAR open/closed discrimination
 - MAR yawn detection
-- Fatigue score weights and EMA
-- Alert level thresholds
+- Fatigue score weighting
+- EMA smoothing validation
+- Alert escalation logic
 - Blink tracker accuracy
-- DurationTimer reset behaviour
+- Duration timer behavior
 
 ---
 
-## 📈 Performance
+# 📈 Performance Benchmarks
 
 | Hardware | Resolution | FPS |
-|---|---|---|
-| MacBook Pro M2 | 640×480 | ~30 |
-| Intel i7 laptop (CPU-only) | 640×480 | ~24 |
-| Raspberry Pi 4 (4 GB) | 320×240 | ~12 |
+|------|------|------|
+| MacBook Pro M2 | 640×480 | ~30 FPS |
+| Intel i7 Laptop | 640×480 | ~24 FPS |
+| Raspberry Pi 4 | 320×240 | ~12 FPS |
 
-MediaPipe Face Mesh runs entirely on CPU — **no GPU required**.
+### Optimization Notes
 
----
-
-## 🗺️ Roadmap
-
-- [ ] PERCLOS implementation (% eye closure over 80-second window)
-- [ ] YOLO-based phone usage / smoking detection
-- [ ] PyTorch temporal model for microsleep classification
-- [ ] Flutter mobile companion app (phone vibration alert)
-- [ ] Streamlit web dashboard for fleet managers
-- [ ] ONNX export for edge inference
+- CPU-only inference
+- MediaPipe optimized C++ backend
+- Dashboard capped at 10 Hz refresh
+- Lightweight facial landmark pipeline
 
 ---
 
-## 🤝 Contributing
+# 🔥 Engineering Highlights
 
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feat/my-feature`
-3. Commit: `git commit -m "feat: add my feature"`
-4. Push: `git push origin feat/my-feature`
-5. Open a Pull Request
-
-Please run `pytest` and `flake8` before submitting.
-
----
-
-## 📄 License
-
-MIT © 2024 — see [LICENSE](LICENSE) for details.
+✅ Built real-time AI fatigue monitoring system using MediaPipe Face Mesh  
+✅ Implemented CPU-optimized facial landmark inference pipelines  
+✅ Developed intelligent fatigue scoring engine using EAR, MAR & head pose  
+✅ Designed multi-level alert escalation architecture with recovery logic  
+✅ Integrated real-time analytics dashboard for fatigue visualization  
+✅ Built modular and extensible computer vision architecture  
+✅ Enabled offline voice alert system without cloud dependencies  
+✅ Developed configurable safety-critical threshold management system  
 
 ---
 
-## 📚 References
+# 🛣️ Future Roadmap
 
-- Soukupová & Čech (2016) — *Real-Time Eye Blink Detection using Facial Landmarks*
-- MediaPipe Face Mesh — [developers.google.com/mediapipe](https://developers.google.com/mediapipe)
-- NHTSA — *Drowsy Driving Research and Program Plan* (2022)
->>>>>>> 942b7caa1b8ce0ed4465081148a7de6d1c21f4b3
+- PERCLOS fatigue metric implementation
+- YOLO-based phone usage detection
+- Smoking detection module
+- Temporal deep learning microsleep classification
+- Flutter mobile companion application
+- Streamlit fleet management dashboard
+- ONNX export for edge deployment
+- Real-time cloud telemetry support
+
+---
+
+# 🌍 Potential Applications
+
+- Smart vehicle safety systems
+- Fleet management monitoring
+- Commercial transportation safety
+- Driver behavior analytics
+- Automotive AI research
+- Embedded edge AI systems
+
+---
+
+# 🔐 Scalability & Reliability
+
+- CPU-efficient inference
+- Modular architecture
+- Configurable thresholds
+- Offline-first alerting
+- Embedded device compatibility
+- Extensible detection pipelines
+
+---
+
+# 🤝 Contributing
+
+Contributions, optimizations, and safety improvements are welcome.
+
+```bash
+# Fork repository
+# Create feature branch
+git checkout -b feature/amazing-feature
+
+# Commit changes
+git commit -m "Add amazing feature"
+
+# Push branch
+git push origin feature/amazing-feature
+```
+
+Please run:
+
+```bash
+pytest
+flake8
+```
+
+before submitting PRs.
+
+---
+
+# 📜 License
+
+MIT License © 2026
+
+See `LICENSE` for details.
+
+---
+
+# 📚 References
+
+- Soukupová & Čech (2016) — Real-Time Eye Blink Detection
+- MediaPipe Face Mesh Documentation
+- NHTSA Drowsy Driving Research
+- OpenCV solvePnP Head Pose Estimation
+
+---
+
+# 👨‍💻 Resume-Friendly Description
+
+> Built a real-time AI-powered driver drowsiness detection system using MediaPipe Face Mesh, OpenCV, EAR/MAR-based fatigue analysis, solvePnP head pose estimation, and intelligent multi-level alert escalation with live analytics dashboards and offline voice alerts.
+
+---
+
+# 🌟 Why This Project Stands Out
+
+This project demonstrates expertise in:
+
+- Computer Vision Engineering
+- Real-Time AI Systems
+- Facial Landmark Analysis
+- Edge AI Optimization
+- OpenCV Development
+- MediaPipe Pipelines
+- Human Behavior Analytics
+- Embedded AI Systems
+- Safety-Critical AI Applications
+- Real-Time Monitoring Systems
+
+---
+
+<div align="center">
+
+### ⭐ If you found this project valuable, consider starring the repository.
+
+</div>
